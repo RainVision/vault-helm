@@ -103,7 +103,7 @@ extra volumes the user may have specified (such as a secret with TLS).
          {{- if (eq .type "configMap") }}
            name: {{ .name }}
          {{- else if (eq .type "secret") }}
-          secretName: {{ .name }}
+           secretName: {{ .name }}
          {{- end }}
   {{- end }}
 {{- end -}}
@@ -167,7 +167,7 @@ based on the mode configured.
   {{- range .Values.server.extraVolumes }}
             - name: userconfig-{{ .name }}
               readOnly: true
-              mountPath: /vault/userconfig/{{ .name }}
+              mountPath: {{ .path | default "/vault/userconfig" }}/{{ .name }}
   {{- end }}
 {{- end -}}
 
@@ -240,7 +240,7 @@ Set's the node selector for pod placement when running in standalone and HA mode
 
 
 {{/*
-Set's extra pod annotations
+Sets extra pod annotations
 */}}
 {{- define "vault.annotations" -}}
   {{- if and (ne .mode "dev") .Values.server.annotations }}
@@ -248,6 +248,17 @@ Set's extra pod annotations
         {{- tpl .Values.server.annotations . | nindent 8 }}
   {{- end }}
 {{- end -}}
+
+{{/*
+Sets extra ui service annotations
+*/}}
+{{- define "vault.ui.annotations" -}}
+  {{- if and (ne .mode "dev") .Values.ui.annotations }}
+  annotations:
+    {{- toYaml .Values.ui.annotations | nindent 4 }}
+  {{- end }}
+{{- end -}}
+
 
 {{/*
 Set's the container resources if the user has set any.
@@ -268,5 +279,29 @@ Inject extra environment vars in the format key:value, if populated
 - name: {{ $key }}
   value: {{ $value | quote }}
 {{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Inject extra environment populated by secrets, if populated
+*/}}
+{{- define "vault.extraSecretEnvironmentVars" -}}
+{{- if .extraSecretEnvironmentVars -}}
+{{- range .extraSecretEnvironmentVars }}
+- name: {{ .envName }}
+  valueFrom:
+   secretKeyRef:
+     name: {{ .secretName }}
+     key: {{ .secretKey }}
+{{- end -}}
+{{- end -}}
+{{- end -}}
+
+{{/* Scheme for health check and local endpoint */}}
+{{- define "vault.scheme" -}}
+{{- if .Values.global.tlsDisable -}}
+{{ "http" }}
+{{- else -}}
+{{ "https" }}
 {{- end -}}
 {{- end -}}
