@@ -67,6 +67,9 @@ spec:
           volumeMounts:
           {{ template "vault.mounts" . }}
           lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "/vault/userconfig/vault-start-script/postStart.sh"]
             preStop:
               exec:
                 command: ["vault", "step-down"]
@@ -77,6 +80,8 @@ spec:
               name: internal
             - containerPort: 8202
               name: replication
+            - containerPort: 8300
+              name: https
           readinessProbe:
             # Check status; unsealed vault servers return 0
             # The exit code reflects the seal status:
