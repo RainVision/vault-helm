@@ -74,16 +74,16 @@ spec:
                 command: ["/bin/sh", "/vault/userconfig/vault-start-script/postStart.sh"]
             preStop:
               exec:
-                command: ["vault", "step-down"]
+                command: ["vault", "operator", "step-down"]
           ports:
             - containerPort: 8200
-              name: http
+              name: https
             - containerPort: 8201
               name: internal
             - containerPort: 8202
               name: replication
-            - containerPort: 8300
-              name: https
+            # - containerPort: 8300
+            #   name: https
           readinessProbe:
             # Check status; unsealed vault servers return 0
             # The exit code reflects the seal status:
