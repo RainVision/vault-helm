@@ -74,7 +74,7 @@ spec:
                 command: ["/bin/sh", "/vault/userconfig/vault-start-script/postStart.sh"]
             preStop:
               exec:
-                command: ["vault", "operator", "step-down"]
+                command: ["vault", "operator", "step-down", "-tls-skip-verify"]
           ports:
             - containerPort: 8200
               name: https
@@ -94,8 +94,16 @@ spec:
               command: ["/bin/sh", "-ec", "vault status -tls-skip-verify"]
             failureThreshold: 2
             initialDelaySeconds: 5
-            periodSeconds: 3
+            periodSeconds: 15
             successThreshold: 1
+            timeoutSeconds: 5
+          livenessProbe:
+            exec:
+              command: ["/bin/sh", "-ec", "vault status -tls-skip-verify"]
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            successThreshold: 1
+            failureThreshold: 3
             timeoutSeconds: 5
   {{ template "vault.volumeclaims" . }}
 {{ end }}
